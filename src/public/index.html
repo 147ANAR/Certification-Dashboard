@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Certification Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 25%, #faf5ff 50%, #f0fdfa 75%, #fefce8 100%);
+      background-attachment: fixed;
+      color: #334155;
+      min-height: 100vh;
+      padding: 14px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 30%, #d946ef 60%, #06b6d4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p { color: #94a3b8; font-size: 0.78rem; }
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ede9fe, #e0f2fe);
+      color: #7c3aed;
+      font-size: 0.65rem; font-weight: 600;
+      padding: 3px 12px; border-radius: 999px;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      border: 1px solid #ddd6fe;
+    }
+
+    /* ── Tiles ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+
+    .tile {
+      border: none;
+      border-radius: 14px;
+      padding: 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: default;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .tile:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+    }
+
+    .tile--violet  { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #e0e7ff 100%); }
+    .tile--fuchsia { background: linear-gradient(135deg, #fdf4ff 0%, #fae8ff 50%, #f5f3ff 100%); }
+    .tile--rose    { background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 50%, #fce7f3 100%); }
+    .tile--indigo  { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #dbeafe 100%); }
+
+    .tile::before { content: none; }
+    .tile::after { content: none; }
+
+    .tile__row { display: flex; align-items: center; justify-content: space-between; }
+
+    .tile__icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .tile--violet  .tile__icon { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: #fff; box-shadow: 0 4px 12px rgba(139,92,246,0.3); }
+    .tile--fuchsia .tile__icon { background: linear-gradient(135deg, #d946ef, #e879f9); color: #fff; box-shadow: 0 4px 12px rgba(217,70,239,0.3); }
+    .tile--rose    .tile__icon { background: linear-gradient(135deg, #f43f5e, #fb7185); color: #fff; box-shadow: 0 4px 12px rgba(244,63,94,0.3); }
+    .tile--indigo  .tile__icon { background: linear-gradient(135deg, #6366f1, #818cf8); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+    .tile__icon svg { width: 18px; height: 18px; }
+
+    .tile__count { font-size: 1.6rem; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+    .tile--violet  .tile__count { color: #7c3aed; }
+    .tile--fuchsia .tile__count { color: #c026d3; }
+    .tile--rose    .tile__count { color: #e11d48; }
+    .tile--indigo  .tile__count { color: #4f46e5; }
+
+    .tile__title { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; }
+    .tile__description { font-size: 0.72rem; color: #a1a1aa; }
+    .tile__trend {
+      font-size: 0.65rem;
+      border-top: 1px solid rgba(0,0,0,0.04);
+      padding-top: 6px; margin-top: auto;
+    }
+    .tile--violet  .tile__trend { color: #8b5cf6; }
+    .tile--fuchsia .tile__trend { color: #d946ef; }
+    .tile--rose    .tile__trend { color: #16a34a; }
+    .tile--indigo  .tile__trend { color: #6366f1; }
+
+    /* ── Bottom Section ── */
+    .bottom-section {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .bottom-section { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,0,0,0.05);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+      transition: box-shadow 0.3s;
+    }
+    .card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.06); }
+    .card::before { content: none; }
+    .card__header {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: linear-gradient(135deg, rgba(245,243,255,0.5), rgba(224,242,254,0.3));
+    }
+    .card__title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+
+    /* ── Summary Table ── */
+    .summary-table { width: 100%; border-collapse: collapse; }
+    .summary-table th {
+      padding: 8px 14px;
+      text-align: left;
+      font-size: 0.68rem; font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      background: rgba(248,250,252,0.6);
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+    .summary-table td {
+      padding: 8px 14px;
+      font-size: 0.78rem;
+      color: #475569;
+      border-bottom: 1px solid rgba(0,0,0,0.03);
+    }
+    .summary-table tr:last-child td { border-bottom: none; }
+    .summary-table tr:hover td { background: rgba(139,92,246,0.03); }
+    .summary-table .cert-count { font-weight: 700; color: #7c3aed; text-align: right; }
+
+    /* ── Table Controls ── */
+    .table-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .search-box {
+      display: flex; align-items: center; gap: 6px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 5px 10px;
+      flex: 1; min-width: 160px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-box:focus-within {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.12);
+    }
+    .search-box svg { width: 14px; height: 14px; color: #cbd5e1; flex-shrink: 0; }
+    .search-box input {
+      background: none; border: none; outline: none;
+      color: #334155; font-size: 0.78rem; width: 100%;
+    }
+    .search-box input::placeholder { color: #cbd5e1; }
+
+    .btn-export {
+      display: flex; align-items: center; gap: 5px;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.72rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.2s;
+      box-shadow: 0 3px 10px rgba(99,102,241,0.3);
+    }
+    .btn-export:hover {
+      box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+      transform: translateY(-1px);
+    }
+    .btn-export svg { width: 13px; height: 13px; }
+
+    /* ── Main Table ── */
+    .main-table-wrap { overflow-x: auto; }
+    .main-table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    .main-table th {
+      padding: 7px 10px;
+      text-align: left;
+      font-size: 0.65rem; font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      background: rgba(248,250,252,0.6);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      white-space: nowrap;
+    }
+    .main-table td {
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      color: #475569;
+      border-bottom: 1px solid rgba(0,0,0,0.03);
+      white-space: nowrap;
+    }
+    .main-table tr:last-child td { border-bottom: none; }
+    .main-table tbody tr:hover td { background: rgba(139,92,246,0.03); }
+    .main-table .sr { color: #cbd5e1; font-size: 0.7rem; }
+
+    /* Status badges */
+    .status {
+      display: inline-block;
+      padding: 2px 10px; border-radius: 999px;
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.3px;
+    }
+    .status--active   { background: linear-gradient(135deg, #ede9fe, #e0e7ff); color: #7c3aed; }
+    .status--expiring { background: linear-gradient(135deg, #fae8ff, #fdf4ff); color: #c026d3; }
+    .status--expired  { background: linear-gradient(135deg, #ffe4e6, #fff1f2); color: #e11d48; }
+
+    .no-results { padding: 20px; text-align: center; color: #cbd5e1; font-size: 0.8rem; }
+
+    /* ── Charts Section ── */
+    .charts-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 900px) { .charts-section { grid-template-columns: 1fr; } }
+
+    .chart-container {
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chart-container canvas { max-width: 100%; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      color: #cbd5e1;
+      font-size: 0.7rem;
+      padding-top: 6px;
+      border-top: 1px solid rgba(0,0,0,0.04);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Certification Dashboard</h1>
+    <p>Workforce certification status overview</p>
+    <span class="badge">Static Data &middot; Q1 2026</span>
+  </header>
+
+  <div class="grid">
+    <div class="tile tile--violet" id="tile-active">
+      <div class="tile__row">
+        <div class="tile__title">Active Certifications</div>
+        <div class="tile__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tile__count" id="count-active">0</div>
+      <div class="tile__description" id="desc-active"></div>
+      <div class="tile__trend" id="trend-active"></div>
+    </div>
+
+    <div class="tile tile--fuchsia" id="tile-renew">
+      <div class="tile__row">
+        <div class="tile__title">Time to Renew</div>
+        <div class="tile__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tile__count" id="count-renew">0</div>
+      <div class="tile__description" id="desc-renew"></div>
+      <div class="tile__trend" id="trend-renew"></div>
+    </div>
+
+    <div class="tile tile--rose" id="tile-expired">
+      <div class="tile__row">
+        <div class="tile__title">Expired Certifications</div>
+        <div class="tile__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tile__count" id="count-expired">0</div>
+      <div class="tile__description" id="desc-expired"></div>
+      <div class="tile__trend" id="trend-expired"></div>
+    </div>
+
+    <div class="tile tile--indigo" id="tile-resigned">
+      <div class="tile__row">
+        <div class="tile__title">Resigned Count</div>
+        <div class="tile__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+            <line x1="17" y1="11" x2="22" y2="11"/><polyline points="19 9 22 11 19 13"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tile__count" id="count-resigned">0</div>
+      <div class="tile__description" id="desc-resigned"></div>
+      <div class="tile__trend" id="trend-resigned"></div>
+    </div>
+  </div>
+
+  <div class="charts-section">
+    <div class="card">
+      <div class="card__header">
+        <span class="card__title">Certification Distribution</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="pie-chart" width="320" height="240"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card__header">
+        <span class="card__title">Monthly Certification Trend</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="line-chart" width="500" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-section">
+    <div class="card">
+      <div class="card__header">
+        <span class="card__title">Certifications by Type</span>
+      </div>
+      <table class="summary-table">
+        <thead><tr><th>Certification Name</th><th style="text-align:right">Count</th></tr></thead>
+        <tbody id="summary-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <span class="card__title">Certification Records</span>
+        <div class="table-controls">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="search-input" placeholder="Search by name, email, role..." />
+          </div>
+          <button class="btn-export" id="btn-export">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+      <div class="main-table-wrap">
+        <table class="main-table">
+          <thead>
+            <tr>
+              <th>Sr.No</th><th>Username</th><th>User Email ID</th><th>Role</th>
+              <th>Project / Account</th><th>Certification Name</th>
+              <th>Cert. Date</th><th>Expiration</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="main-tbody"></tbody>
+        </table>
+        <div class="no-results" id="no-results" style="display:none">No matching records found.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Last updated: March 9, 2026</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+  const TILE_DATA = {
+    active:   { count: 342, description: "Across 12 certification types", trend: "\u2191 +18 from last quarter" },
+    renew:    { count: 47,  description: "Expiring within 30 days",        trend: "\u26A0 Action required" },
+    expired:  { count: 29,  description: "Past expiration date",           trend: "\u2193 \u22125 resolved this week" },
+    resigned: { count: 14,  description: "Employees who resigned",         trend: "YTD 2026" }
+  };
+
+  const SUMMARY_DATA = [
+    { name: "Policy Configurator",    count: 98 },
+    { name: "Billing Configurator",   count: 87 },
+    { name: "Claims Configurator",    count: 79 },
+    { name: "Policy Active Delivery", count: 78 }
+  ];
+
+  const RECORDS = [
+    { sr:1,  username:"Alice Johnson",  email:"alice.johnson@corp.com",   role:"Policy Analyst",     account:"Project Alpha", cert:"Policy Configurator",    certDate:"2024-03-15", expDate:"2026-03-15", status:"Active" },
+    { sr:2,  username:"Bob Smith",      email:"bob.smith@corp.com",        role:"Billing Specialist", account:"Project Beta",  cert:"Billing Configurator",   certDate:"2024-06-01", expDate:"2026-06-01", status:"Active" },
+    { sr:3,  username:"Carol Davis",    email:"carol.davis@corp.com",      role:"Claims Manager",     account:"Project Gamma", cert:"Claims Configurator",    certDate:"2023-09-20", expDate:"2025-09-20", status:"Expired" },
+    { sr:4,  username:"David Lee",      email:"david.lee@corp.com",        role:"Delivery Lead",      account:"Project Delta", cert:"Policy Active Delivery", certDate:"2024-01-10", expDate:"2026-01-10", status:"Active" },
+    { sr:5,  username:"Eva Martinez",   email:"eva.martinez@corp.com",     role:"Policy Analyst",     account:"Project Alpha", cert:"Policy Configurator",    certDate:"2024-02-28", expDate:"2026-02-28", status:"Expiring Soon" },
+    { sr:6,  username:"Frank Wilson",   email:"frank.wilson@corp.com",     role:"Billing Specialist", account:"Project Beta",  cert:"Billing Configurator",   certDate:"2023-11-05", expDate:"2025-11-05", status:"Expired" },
+    { sr:7,  username:"Grace Kim",      email:"grace.kim@corp.com",        role:"Claims Analyst",     account:"Project Gamma", cert:"Claims Configurator",    certDate:"2024-07-22", expDate:"2026-07-22", status:"Active" },
+    { sr:8,  username:"Henry Brown",    email:"henry.brown@corp.com",      role:"Delivery Analyst",   account:"Project Delta", cert:"Policy Active Delivery", certDate:"2024-08-14", expDate:"2026-08-14", status:"Active" },
+    { sr:9,  username:"Isla Thompson",  email:"isla.thompson@corp.com",    role:"Policy Analyst",     account:"Project Alpha", cert:"Policy Configurator",    certDate:"2024-09-03", expDate:"2026-09-03", status:"Active" },
+    { sr:10, username:"Jake Robinson",  email:"jake.robinson@corp.com",    role:"Billing Manager",    account:"Project Beta",  cert:"Billing Configurator",   certDate:"2024-02-17", expDate:"2026-02-17", status:"Expiring Soon" },
+    { sr:11, username:"Karen White",    email:"karen.white@corp.com",      role:"Claims Specialist",  account:"Project Gamma", cert:"Claims Configurator",    certDate:"2024-05-30", expDate:"2026-05-30", status:"Active" },
+    { sr:12, username:"Leo Harris",     email:"leo.harris@corp.com",       role:"Delivery Manager",   account:"Project Delta", cert:"Policy Active Delivery", certDate:"2023-12-11", expDate:"2025-12-11", status:"Expiring Soon" },
+    { sr:13, username:"Rahul K",        email:"itzrahul2016@gmail.com",    role:"Policy Analyst",     account:"Project Alpha", cert:"Policy Configurator",    certDate:"2024-05-01", expDate:"2026-03-15", status:"Expiring Soon" },
+  ];
+
+  function statusClass(s) {
+    if (s === "Active")        return "status--active";
+    if (s === "Expiring Soon") return "status--expiring";
+    return "status--expired";
+  }
+
+  function animateCount(el, target, duration = 900) {
+    const start = performance.now();
+    (function step(now) {
+      const p = Math.min((now - start) / duration, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(e * target).toLocaleString();
+      if (p < 1) requestAnimationFrame(step);
+    })(performance.now());
+  }
+
+  function renderSummary() {
+    document.getElementById("summary-tbody").innerHTML = SUMMARY_DATA.map(r => `
+      <tr><td>${r.name}</td><td class="cert-count">${r.count}</td></tr>`).join("");
+  }
+
+  function renderMainTable(data) {
+    const tbody = document.getElementById("main-tbody");
+    const noResults = document.getElementById("no-results");
+    if (data.length === 0) { tbody.innerHTML = ""; noResults.style.display = "block"; return; }
+    noResults.style.display = "none";
+    tbody.innerHTML = data.map(r => `
+      <tr>
+        <td class="sr">${r.sr}</td>
+        <td>${r.username}</td>
+        <td>${r.email}</td>
+        <td>${r.role}</td>
+        <td>${r.account}</td>
+        <td>${r.cert}</td>
+        <td>${r.certDate}</td>
+        <td>${r.expDate}</td>
+        <td><span class="status ${statusClass(r.status)}">${r.status}</span></td>
+      </tr>`).join("");
+  }
+
+  function filterRecords(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) return RECORDS;
+    return RECORDS.filter(r =>
+      [r.username, r.email, r.role, r.account, r.cert, r.status].some(v => v.toLowerCase().includes(q))
+    );
+  }
+
+  function exportCSV() {
+    const data = filterRecords(document.getElementById("search-input").value);
+    const headers = ["Sr.No","Username","User Email ID","Role","Project/Account","Certification Name","Certification Date","Certification Expiration","Status"];
+    const rows = data.map(r => [r.sr, r.username, r.email, r.role, r.account, r.cert, r.certDate, r.expDate, r.status]);
+    const csv = [headers, ...rows].map(row => row.map(v => `"${v}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "certification-records.csv"; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    [["active","active"],["renew","renew"],["expired","expired"],["resigned","resigned"]].forEach(([key, sfx]) => {
+      const d = TILE_DATA[key];
+      document.getElementById("desc-" + sfx).textContent = d.description;
+      document.getElementById("trend-" + sfx).textContent = d.trend;
+      animateCount(document.getElementById("count-" + sfx), d.count);
+    });
+    renderSummary();
+    renderMainTable(RECORDS);
+    document.getElementById("search-input").addEventListener("input", e => renderMainTable(filterRecords(e.target.value)));
+    document.getElementById("btn-export").addEventListener("click", exportCSV);
+
+    // ── 3D Pie Chart ──
+    (function draw3DPie() {
+      const canvas = document.getElementById("pie-chart");
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = 320 * dpr;
+      canvas.height = 240 * dpr;
+      canvas.style.width = "320px";
+      canvas.style.height = "240px";
+      ctx.scale(dpr, dpr);
+
+      const data = [98, 87, 79, 78];
+      const labels = ["Policy Configurator", "Billing Configurator", "Claims Configurator", "Policy Active Delivery"];
+      const colors = ["#8b5cf6", "#d946ef", "#f43f5e", "#6366f1"];
+      const darkColors = ["#6d28d9", "#a21caf", "#be123c", "#4338ca"];
+      const total = data.reduce((a, b) => a + b, 0);
+      const cx = 160, cy = 90, rx = 85, ry = 50, depth = 20;
+
+      let startAngle = -0.5 * Math.PI;
+      for (let d = depth; d > 0; d--) {
+        let angle = startAngle;
+        data.forEach((val, i) => {
+          const sliceAngle = (val / total) * 2 * Math.PI;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + d, rx, ry, 0, angle, angle + sliceAngle);
+          ctx.lineTo(cx + rx * Math.cos(angle + sliceAngle), cy + d + ry * Math.sin(angle + sliceAngle));
+          ctx.ellipse(cx, cy + d, rx, ry, 0, angle + sliceAngle, angle, true);
+          ctx.closePath();
+          ctx.fillStyle = darkColors[i];
+          ctx.fill();
+          angle += sliceAngle;
+        });
+      }
+
+      let angle = startAngle;
+      data.forEach((val, i) => {
+        const sliceAngle = (val / total) * 2 * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.ellipse(cx, cy, rx, ry, 0, angle, angle + sliceAngle);
+        ctx.closePath();
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        angle += sliceAngle;
+      });
+
+      const legendY = 170;
+      labels.forEach((label, i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const lx = 10 + col * 165;
+        const ly = legendY + row * 20;
+        ctx.fillStyle = colors[i];
+        ctx.beginPath();
+        ctx.roundRect(lx, ly, 10, 10, 2);
+        ctx.fill();
+        ctx.fillStyle = "#64748b";
+        ctx.font = "10px -apple-system, sans-serif";
+        ctx.fillText(`${label} (${data[i]})`, lx + 15, ly + 9);
+      });
+    })();
+
+    // ── Line Chart ──
+    const lineCtx = document.getElementById("line-chart").getContext("2d");
+    new Chart(lineCtx, {
+      type: "line",
+      data: {
+        labels: ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar"],
+        datasets: [
+          {
+            label: "Active", data: [298, 310, 318, 325, 334, 342],
+            borderColor: "#8b5cf6", backgroundColor: "rgba(139,92,246,0.08)",
+            fill: true, tension: 0.4, pointBackgroundColor: "#8b5cf6", pointRadius: 4, borderWidth: 2
+          },
+          {
+            label: "Expiring Soon", data: [32, 38, 41, 44, 42, 47],
+            borderColor: "#d946ef", backgroundColor: "rgba(217,70,239,0.08)",
+            fill: true, tension: 0.4, pointBackgroundColor: "#d946ef", pointRadius: 4, borderWidth: 2
+          },
+          {
+            label: "Expired", data: [45, 42, 39, 36, 33, 29],
+            borderColor: "#f43f5e", backgroundColor: "rgba(244,63,94,0.08)",
+            fill: true, tension: 0.4, pointBackgroundColor: "#f43f5e", pointRadius: 4, borderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { color: "#94a3b8", font: { size: 10 }, usePointStyle: true, padding: 12 } }
+        },
+        scales: {
+          x: { ticks: { color: "#94a3b8", font: { size: 10 } }, grid: { color: "rgba(0,0,0,0.03)" } },
+          y: { ticks: { color: "#94a3b8", font: { size: 10 } }, grid: { color: "rgba(0,0,0,0.03)" }, beginAtZero: false }
+        }
+      }
+    });
+  });
+</script>
+</body>
+</html>

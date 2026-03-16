@@ -1,0 +1,4 @@
+node_modules/
+dist/
+.env
+dashboard-01.zip
